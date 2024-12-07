@@ -13,26 +13,21 @@ const cookieParser = require("cookie-parser");
 
 
 
-const cors = require('cors');
+
+const Api = require("./Route/api");
+const app = express();
+
 app.use(cors({
   origin: 'https://your-frontend.vercel.app',  // Replace with your frontend's URL
   methods: ['GET', 'POST','DELETE'],
 }));
-const Api = require("./Route/api");
-const app = express();
-
 mongoose.connect("mongodb://127.0.0.1:27017/Users");
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.set("view engine", "ejs");
 app.set("views", path.resolve("./Views"));
 app.use(cookieParser());
-app.use(
-  cors({
-    origin: "http://localhost:5173", // Your React app's URL
-    credentials: true, // Allow cookies to be sent
-  }),
-);
+
 
 app.use(authenticateToken);
 app.use("/api", Api);
