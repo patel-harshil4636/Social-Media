@@ -11,6 +11,7 @@ import Login from "./Pages/Login";
 import Profile from "./Pages/Profile";
 import UserSearch from "./Pages/Search";
 import UserProfile from "./Pages/userProfile";
+import { fetchData } from "./Services/api";
 
 function App() {
   const navigate = useNavigate();
@@ -22,7 +23,17 @@ function App() {
     }
   }, []);
   const [count, setCount] = useState(0);
-
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchData("endpoint");
+        console.log(data);
+      } catch (error) {
+        console.error("API Error:", error.message);
+      }
+    };
+    loadData();
+  }, []);
   return (
     <>
       <Routes>
