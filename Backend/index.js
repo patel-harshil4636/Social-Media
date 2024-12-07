@@ -1,6 +1,7 @@
 const express = require("express");
 const staticRoute = require("./Route/Static");
 const path = require("path");
+const cors = require('cors');
 const {
   authenticateToken,
   restrictTo,
@@ -9,7 +10,14 @@ const { default: mongoose } = require("mongoose");
 const userRouter = require("./Route/Users");
 const multer = require("multer");
 const cookieParser = require("cookie-parser");
-const cors = require("cors");
+
+
+
+const cors = require('cors');
+app.use(cors({
+  origin: 'https://your-frontend.vercel.app',  // Replace with your frontend's URL
+  methods: ['GET', 'POST','DELETE'],
+}));
 const Api = require("./Route/api");
 const app = express();
 
