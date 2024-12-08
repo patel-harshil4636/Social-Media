@@ -123,7 +123,7 @@ function UserProfile() {
   }, [followed]);
 
   useEffect(() => {
-    if (toggleFollowers) {
+    if (toggleFollowers && followed) {
       document.body.style.overflowY = "hidden";
     } else {
       document.body.style.overflowY = "scroll";
@@ -156,8 +156,22 @@ function UserProfile() {
               onMouseLeave={() => {
                 setToggleFollowers(!toggleFollowers);
               }}
-              className={`absolute z-40 overflow-y-scroll scroll-smooth text-white opacity-100  w-1/6 h-1/6 bg-black sm:right-3/4    rounded-md border shadow hover:shadow-2xl duration-500  hover:shadow-blue-800  `}
+              className={`absolute max-h-[400px] overflow-y-auto
+  [&::-webkit-scrollbar]:w-1
+  [&::-webkit-scrollbar-track]:rounded-md
+  [&::-webkit-scrollbar-track]:bg-slate-200
+  [&::-webkit-scrollbar-thumb]:rounded-full
+  [&::-webkit-scrollbar-thumb]:bg-gray-100
+  dark:[&::-webkit-scrollbar-track]:bg-neutral-900
+  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 
+  
+  z-40  overscroll-auto  scroll-smooth text-white opacity-100  w-1/6 h-1/6 bg-black sm:right-3/4    rounded-md border shadow hover:shadow-2xl duration-500  hover:shadow-blue-800  `}
             >
+
+              <h1 className="text-center">
+              <i className="bi bi-people-fill"></i>
+              </h1>
+              <hr />
               {fData?.followers?.map((follower) => (
                 <div
                   key={follower}
@@ -168,7 +182,7 @@ function UserProfile() {
               ))}
             </div>
           )}
-          <div className={`duration-500 ${toggleFollowers ? "blur-sm" : ""}`}>
+          <div className={`duration-500 ${toggleFollowers && followed ? "blur-sm" : ""}`}>
             <div className="border overflow-x-hidden bg-zinc-800 justify-center flex  text-gray-300  gap-5   sm:gap-32 rounded-b-3xl">
               <div className="text-gray-300 flex  justify-center gap-6 rounded-b-3xl">
                 <img

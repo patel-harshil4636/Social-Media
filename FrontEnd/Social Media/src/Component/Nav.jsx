@@ -130,7 +130,15 @@ function Nav() {
                   placeholder="Search for a user..."
                 />
                 <ul
-                  className={`absolute grid gap-3 py-2 bg-slate-900 px-5 ${!sm ? "bottom-16 rounded-t-xl" : ""}  ${searchTerm == "" || searchTerm.includes(" ") || filteredUsers.length == 0 || searchTerm.includes(data?.userName) ? "hidden" : ""} `}
+                  className={`absolute max-h-[400px] overflow-y-auto
+  [&::-webkit-scrollbar]:w-2
+  [&::-webkit-scrollbar-track]:rounded-full
+  [&::-webkit-scrollbar-track]:bg-gray-100
+  [&::-webkit-scrollbar-thumb]:rounded-full
+  [&::-webkit-scrollbar-thumb]:bg-gray-300
+  dark:[&::-webkit-scrollbar-track]:bg-neutral-700
+  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 grid h-36 hover:scroll-auto rounded-b-xl overflow-y-scroll gap-3 py-2 bg-slate-900 px-5 ${!sm ? "bottom-16 rounded-t-xl" : ""}  ${searchTerm == "" || searchTerm.includes(" ") || filteredUsers.length == 0 || searchTerm.includes(data?.userName) ? "hidden" : ""} `}
+
                 >
                   {filteredUsers.map(
                     (user, index) =>
