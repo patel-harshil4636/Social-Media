@@ -94,7 +94,7 @@ userRouter.post("/login", async (req, res) => {
       }
       // console.log(req.cookies.token);
 
-      return res.redirect("http://localhost:5173/");
+      return res.redirect("/");
     } catch (error) {}
   }
 });
@@ -155,6 +155,7 @@ userRouter.get("/AllUsers", async (req, res) => {
   const users = await User.find({}, { userName: 1, email: 1, _id: 0 });
   res.json(users);
 });
+
 
 // send All User Data for the Search List
 
