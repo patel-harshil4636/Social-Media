@@ -1,6 +1,4 @@
-import {
-  __commonJS
-} from "./chunk-DC5AMYBS.js";
+import { __commonJS } from "./chunk-DC5AMYBS.js";
 
 // node_modules/@eslint/js/package.json
 var require_package = __commonJS({
@@ -12,35 +10,26 @@ var require_package = __commonJS({
       main: "./src/index.js",
       types: "./types/index.d.ts",
       scripts: {
-        "test:types": "tsc -p tests/types/tsconfig.json"
+        "test:types": "tsc -p tests/types/tsconfig.json",
       },
-      files: [
-        "LICENSE",
-        "README.md",
-        "src",
-        "types"
-      ],
+      files: ["LICENSE", "README.md", "src", "types"],
       publishConfig: {
-        access: "public"
+        access: "public",
       },
       repository: {
         type: "git",
         url: "https://github.com/eslint/eslint.git",
-        directory: "packages/js"
+        directory: "packages/js",
       },
       homepage: "https://eslint.org",
       bugs: "https://github.com/eslint/eslint/issues/",
-      keywords: [
-        "javascript",
-        "eslint-plugin",
-        "eslint"
-      ],
+      keywords: ["javascript", "eslint-plugin", "eslint"],
       license: "MIT",
       engines: {
-        node: "^18.18.0 || ^20.9.0 || >=21.1.0"
-      }
+        node: "^18.18.0 || ^20.9.0 || >=21.1.0",
+      },
     };
-  }
+  },
 });
 
 // node_modules/@eslint/js/src/configs/eslint-all.js
@@ -48,24 +37,24 @@ var require_eslint_all = __commonJS({
   "node_modules/@eslint/js/src/configs/eslint-all.js"(exports, module) {
     "use strict";
     module.exports = Object.freeze({
-      "rules": {
+      rules: {
         "accessor-pairs": "error",
         "array-callback-return": "error",
         "arrow-body-style": "error",
         "block-scoped-var": "error",
-        "camelcase": "error",
+        camelcase: "error",
         "capitalized-comments": "error",
         "class-methods-use-this": "error",
-        "complexity": "error",
+        complexity: "error",
         "consistent-return": "error",
         "consistent-this": "error",
         "constructor-super": "error",
-        "curly": "error",
+        curly: "error",
         "default-case": "error",
         "default-case-last": "error",
         "default-param-last": "error",
         "dot-notation": "error",
-        "eqeqeq": "error",
+        eqeqeq: "error",
         "for-direction": "error",
         "func-name-matching": "error",
         "func-names": "error",
@@ -231,7 +220,7 @@ var require_eslint_all = __commonJS({
         "prefer-rest-params": "error",
         "prefer-spread": "error",
         "prefer-template": "error",
-        "radix": "error",
+        radix: "error",
         "require-atomic-updates": "error",
         "require-await": "error",
         "require-unicode-regexp": "error",
@@ -239,16 +228,16 @@ var require_eslint_all = __commonJS({
         "sort-imports": "error",
         "sort-keys": "error",
         "sort-vars": "error",
-        "strict": "error",
+        strict: "error",
         "symbol-description": "error",
         "unicode-bom": "error",
         "use-isnan": "error",
         "valid-typeof": "error",
         "vars-on-top": "error",
-        "yoda": "error"
-      }
+        yoda: "error",
+      },
     });
-  }
+  },
 });
 
 // node_modules/@eslint/js/src/configs/eslint-recommended.js
@@ -317,10 +306,10 @@ var require_eslint_recommended = __commonJS({
         "no-with": "error",
         "require-yield": "error",
         "use-isnan": "error",
-        "valid-typeof": "error"
-      })
+        "valid-typeof": "error",
+      }),
     });
-  }
+  },
 });
 
 // node_modules/@eslint/js/src/index.js
@@ -330,14 +319,14 @@ var require_src = __commonJS({
     module.exports = {
       meta: {
         name: "@eslint/js",
-        version
+        version,
       },
       configs: {
         all: require_eslint_all(),
-        recommended: require_eslint_recommended()
-      }
+        recommended: require_eslint_recommended(),
+      },
     };
-  }
+  },
 });
 export default require_src();
 //# sourceMappingURL=@eslint_js.js.map

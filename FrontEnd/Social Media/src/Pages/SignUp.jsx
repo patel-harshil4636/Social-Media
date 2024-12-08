@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 const SignUp = () => {
   const navigate = useNavigate();
   const [allUserNames, setAllUserNames] = useState([]);
+  const [allEmails, setAllEmails] = useState([]);
   useEffect(() => {
     const fetchUserName = async () => {
       const response = await fetch("user/AllUsers", {
@@ -13,11 +14,14 @@ const SignUp = () => {
         },
       });
       const jData = await response.json();
+      setAllEmails(jData?.map((json) => json.email));
 
       setAllUserNames(jData?.map((json) => json.userName));
     };
     fetchUserName();
   }, []);
+  console.log(allEmails);
+
   const [formData, setFormData] = useState({
     FullName: "",
     userName: "",
@@ -120,34 +124,58 @@ const SignUp = () => {
             <label className="block text-sm font-medium text-gray-600">
               Email
             </label>
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="flex border  px-2 rounded-lg border-gray-300">
+              <input
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full my-1  py-2 outline-none rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              />
+              <i
+                className={`bi bi-exclamation-triangle block my-auto ${allEmails.includes(formData.email) ? "text-red-800" : "text-green-500"} `}
+              ></i>
+            </div>
+            {allEmails.includes(formData.email) && (
+              <p className="text-sm  text-red-800">
+                Email already exists, please choose a different one.
+              </p>
+            )}
           </div>
 
           {/* Password */}
-          <div>
+          <div className="my-5">
             <label className="block text-sm font-medium text-gray-600">
               Password
             </label>
+            <div className="flex border  px-2 rounded-lg border-gray-300">
+              <input
+                type="password"
+                name="password"
+                placeholder="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full my-1  py-2 outline-none rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              />
+              <i
+                onClick={(e) => {
+                  console.log();
 
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter a password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full mt-1 px-4 py-2 border-0 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-            />
+                  e.target.classList.toggle("bi-eye-slash");
+                  e.target.classList.toggle("bi-eye-fill");
+                  e.currentTarget.previousElementSibling.type == "password"
+                    ? (e.currentTarget.previousElementSibling.type = "text")
+                    : (e.currentTarget.previousElementSibling.type =
+                        "password");
+                  console.log();
+                }}
+                className={`bi bi-eye-slash block my-auto  `}
+              ></i>
+            </div>
           </div>
-
           {/* Picture */}
           <div>
             <label className="block text-sm font-medium text-gray-600">

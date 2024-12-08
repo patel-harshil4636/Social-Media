@@ -7,7 +7,6 @@ export const Provider = (props) => {
   const [searchData, setSearchData] = useState(null);
   const [test, setTest] = useState(null);
   const [sm, setSm] = useState(false);
-  const [profileFollowes, setProfileFollowes] = useState([]);
   const [profileFData, setProfileFData] = useState({});
 
   const x = window.matchMedia("(min-width:640px)");
@@ -42,9 +41,6 @@ export const Provider = (props) => {
     };
 
     ffFetcher();
-  }, []);
-  useEffect(() => {
-    console.log("FLLOWERS", profileFollowes); // Logs the updated value of profileFollowes
   }, []);
 
   useEffect(() => {

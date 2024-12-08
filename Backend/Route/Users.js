@@ -152,7 +152,7 @@ userRouter.get("/allPosts", async (req, res) => {
 // Send All userNames
 
 userRouter.get("/AllUsers", async (req, res) => {
-  const users = await User.find({}, { userName: 1, _id: 0 });
+  const users = await User.find({}, { userName: 1, email: 1, _id: 0 });
   res.json(users);
 });
 
