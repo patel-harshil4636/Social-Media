@@ -1,19 +1,26 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import Nav from "../Component/Nav";
 import { Background } from "../Contexts/sm";
 import WarningBtn from "../Component/WarningBtn";
 import js from "@eslint/js";
+import { motion, animate } from "framer-motion";
+import FileUploadForm from "../Component/FileUploadForm ";
 
 function Profile() {
-  const { sm, profileFData } = useContext(Background);
+  const { sm, profileFData, updatedFileToggle } = useContext(Background);
   const [toggle, setToggle] = useState(false);
+  const [editImgToggle, setEditImgToggle] = useState(false);
   const [file, setFile] = useState(null);
+  const [showImgFrom, setShowImgFrom] = useState(false);
   const [files, setFiles] = useState(null);
   const [newPost, setNewPost] = useState(null);
-
+  const [editCaption,setEditCaption]= useState(false);
+  const [isPostDeleted, setIsPostDeleted] = useState(false)
   const [caption, setCaption] = useState(null);
-
-  const { data } = useContext(Background);
+  const [postEditId, setPostEditId] = useState(null); //  isdentify the post
+  const captionRef=useRef([]);
+  const [toggleEditPost, setToggleEditPost] = useState(false);
+  const { data,isProfileUpdated } = useContext(Background);
   const [posts, setPosts] = useState([]);
 
   const handleUpload = async (e) => {
@@ -61,21 +68,87 @@ function Profile() {
       setPosts(jsonData);
     };
 
-    fetchData();
-  }, [newPost]);
+    console.log(updatedFileToggle);
 
-  console.log(profileFData);
+    fetchData();
+  }, [newPost, updatedFileToggle,isPostDeleted]);
+
+  const handleEdit = (index) => {
+    setToggleEditPost(!toggleEditPost);
+    setPostEditId(index);
+  };
+
+  const handleDeletePost =async(add,uName)=>{
+    const conformation=prompt(`Are you sure you want to delete then TYPE DELETE`);
+    if(conformation==='DELETE' && conformation)
+    {
+      
+     try {
+        const deleteResopose = await fetch('/api/deleteOnePost',
+          {
+            method:"DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              imgAdd: add,
+              userName: uName,
+            }),
+          }
+        );// delete api
+          const deletedPostCaption= await deleteResopose.json();
+          setIsPostDeleted(!isPostDeleted);
+
+          alert("Dear "+data?.Fname+" " +data?.Lname+" your Post Created at "+deletedPostCaption?.createdAt.split('T')[0].replace('T','')+" are Deleted")
+          
+     } catch (error) {
+      
+     }
+    }
+  }
+  //   console.log(profileFData);
+  // console.log(editImgToggle);
 
   return (
     <>
       <Nav></Nav>
-      <div className=" overflow-x-hidden bg-zinc-600 ">
+      <div className="MainFont overflow-x-hidden bg-zinc-600 ">
         <div className=" text-gray-300 flex  justify-center gap-6 rounded-b-3xl">
           <img
-            src={data?.imgAdd}
-            className="w-1/4 sm:w-1/6 sm:h-60 h-24    rounded-full object-cover my-auto justify-items-start object-center"
+            src={new URL(data?.imgAdd, import.meta.url).href}
+            className={`w-1/4 sm:w-1/6 sm:h-60 h-24    rounded-full object-cover my-auto justify-items-start object-center ${editImgToggle ? "brightness-50" : ""}`}
             alt=""
+            onMouseLeave={() => setEditImgToggle(false)}
+            onMouseEnter={() => setEditImgToggle(true)}
           />
+
+          {editImgToggle && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                delay: 0,
+                duration: 0.5,
+              }}
+              onMouseEnter={() => setEditImgToggle(true)}
+              className=" absolute z-20 translate-y-24  -translate-x-32 "
+            >
+              <button
+                onClick={() => {
+                  setShowImgFrom(!showImgFrom);
+                }}
+                className="bg-black rounded-2xl duration-75 p-3 text-md text-white hover:text-black hover:bg-white"
+              >
+                Chnage Profile
+                <i
+                  className={`bi  ${showImgFrom ? "bi-arrow-down" : "bi-file-earmark-image"}`}
+                ></i>
+              </button>
+              <div className="absolute ">
+                {showImgFrom && <FileUploadForm></FileUploadForm>}
+              </div>
+            </motion.div>
+          )}
           <div className="my-auto   ">
             <div className="flex  gap-2 mx-auto  w-fit text-black">
               <div>
@@ -103,7 +176,7 @@ function Profile() {
           </div>
         </div>
       </div>
-      <div className="border bg-neutral-500 pb-12  text-white rounded-lg">
+      <div className="border MainFont bg-neutral-500 pb-12  text-white rounded-lg">
         <div className="flex ">
           <h2 className="text-xl text-center  w-full mx-auto  font-bold my-auto">
             Your Posts
@@ -165,28 +238,126 @@ function Profile() {
             </>
           )}
         </div>
-        <div className="flex  flex-wrap  gap-4 p-3 justify-center w-fit sm:w-5/6 mx-auto">
+        <div className="flex  flex-wrap  gap-4 p-3   justify-center w-fit sm:w-5/6 mx-auto">
           {posts.map((post, index) => (
-            <div
-              key={index}
-              className="bg-slate-100 rounded-tl-none  rounded-xl"
-            >
-              <h1 className="text-black ms-2 font-thin">{data?.userName}</h1>
+            <div key={index} className="bg-[#FEFAE0] text-sm w-48  sm:text-xl sm:w-max  rounded-xl">
+              <div className="flex bg mx-auto">
+             <div className="flex rounded-xl rounded-bl-none rounded-tr-none mb-4 p-1 px-4 justify-between gap-5 bg-[#E9EDC9]">
+             <img
+                  src={new URL(data?.imgAdd, import.meta.url).href}
+                  className="rounded-full object-cover object-center w-7 h-7"
+                  alt=""
+                />
+                <h1 className="text-black my-auto  font-medium">
+                  {data?.userName}
+                </h1>
+             </div>
+               <div className="ms-auto mt-1 me-1">
+               <motion.i
+                  animate={{
+                    rotate:
+                      postEditId == index && toggleEditPost ? [0, 90] : [90, 0],
+                  }}
+                  transition={{
+                    duration: 0.1,
+                    bounceStiffness: 1,
+                    bounceDamping: 2,
+                    damping: 5,
+                    delayChildren: 0.5,
+                    // delay: 0.5,
+
+                    type: "spring",
+                  }}
+                  className="bi  bi-three-dots-vertical text-lg block  cursor-pointer text-black"
+                  onClick={() => {
+                    handleEdit(index);
+                  }}
+                ></motion.i>
+               </div>
+              </div>
+              {postEditId === index && (
+                <div className="absolute  w-fit">
+                  <motion.ul
+                    initial={{
+                      height: 10,
+                    }}
+                    layout
+                    animate={{
+                      opacity: toggleEditPost ? [0, 1] : [1, 0],
+                      // visibility:toggleEditPost?['hidden','show']:['show','hidden'],
+                      height: toggleEditPost ? "auto" : 10,
+                    }}
+                    transition={{
+                      duration: 0.1,
+                      ease: "easeInOut",
+
+                      // delay: 0.5,
+                    }}
+                    className="text-black relative grid gap-3 text-center cursor-pointer bg-purple-600 rounded-xl sm:left-44 left-28 p-2 bottom-2 "
+                  >
+                    <motion.li
+                      animate={{
+                        opacity: [0, 1],
+                      }}
+                      onClick={()=>{
+                        handleDeletePost(post.url,data?.userName);
+                      }}
+                      className="flex gap-3  justify-center select-none "
+                    >
+                      Delete <i className="bi bi-trash3-fill"></i>
+                    </motion.li>
+                    <motion.li
+                      animate={{
+                        opacity: [0, 1],
+                      }}
+                      onClick={()=>{
+                        setEditCaption(!editCaption);
+                    console.log(captionRef.current[index].disabled?captionRef.current[index].click( ):'');
+                      
+                                            
+                      }}
+                      className="flex gap-3 justify-center select-none  "
+                    >
+                      Edit<i className="bi bi-pencil-square"></i>
+                    </motion.li>
+                  </motion.ul>
+                </div>
+              )}
               <img
-                className="w-fit sm:h-80 h-52   object-cover  object-center mx-auto rounded-b-xl  "
+                className="w-max sm:h-80 h-48 mx-5   object-cover  object-center  rounded-xl  "
                 src={[post?.url]}
                 alt="a"
                 style={{
                   aspectRatio: "4/5",
                 }}
               />
-              <div className="ms-2 flex gap-2">
-                <i className="bi bi-heart-fill text-pink-700 text-xl"></i>
-                <i className="bi bi-chat  text-xl text-black"></i>
+            <div className="flex gap-2 my-2.5 items-center sm:text-xl text-sm">
+            <div className=" flex gap-2 px-3 items-center rounded-sm rounded-r-full bg-[#FADDE1]">
+                <i className="bi bi-heart-fill text-pink-700 "></i>
+                <i className="bi bi-chat   text-black"></i>
               </div>
-              <h2 className="text-black ms-2">Caption: {post.caption}</h2>
+           <div className="flex text-[#222618] py-0.5 px-2 ms-auto w-2/3   rounded-l-full bg-[#E9EDC9] my-auto gap-2">
+
+           <h3 className="mx-auto">
+           {post?.caption} 
+           </h3>
+           {/* <input  type="text"  className="w-fit" value={editCaption?"":post.caption} onKeyUp={()=>
+                {
+
+                }
+              } disabled={editCaption&&index==postEditId?false:true } ref={(el)=>(captionRef.current[index]=el)} /> */}
+           
+           </div>
+            </div>
             </div>
           ))}
+          {
+            posts.length === 0 && (
+              <div className="flex justify-center items-center w-fit h-full">
+                <h1 className="text-xl text-center text-black">No Posts</h1>
+              </div>
+            )
+          }
         </div>
       </div>
     </>

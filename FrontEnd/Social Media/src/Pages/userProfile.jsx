@@ -1,16 +1,30 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import React, {
+  Suspense,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import Nav from "../Component/Nav";
 import { Background } from "../Contexts/sm";
 import js from "@eslint/js";
-import { animate } from "framer-motion";
+import { animate, useScroll } from "framer-motion";
 import InfoBtn from "../Component/InfoBtn";
+import { motion } from "framer-motion";
 
 function UserProfile() {
   const [posts, setPosts] = useState([]);
   const followBox = useRef(null);
 
-  const { setBodyOpacity } = useContext(Background);
+  const [activeIndex, setActiveIndex] = useState(null);
+
+  const navigate = useNavigate();
+
+  const { allUserPicture, userName, setRander, rander } =
+    useContext(Background);
+  // console.log({allUserPosts,userName});
+
   const params = useParams();
   const [loading, seLoading] = useState(true);
   const [data, setData] = useState({});
@@ -19,6 +33,9 @@ function UserProfile() {
   const [toggleFollowers, setToggleFollowers] = useState(false);
 
   const [fData, setFData] = useState({});
+  const { scrollYProgress } = useScroll();
+  const listed = useRef(null);
+  const notShowd = useRef(null);
 
   useEffect(() => {
     if (params.userName) {
@@ -32,6 +49,7 @@ function UserProfile() {
             },
           });
           const jsonData = await response.json();
+
           if (jsonData) {
             setData(jsonData);
             seLoading(false); // Explicitly set loading to false
@@ -69,6 +87,8 @@ function UserProfile() {
   }, [params.userName]);
 
   const handleFollow = async () => {
+    setRander(!rander);
+
     setFollowed(true); // This triggers a re-render
     try {
       const response = await fetch(`/api/Follow/${params.userName}`, {
@@ -87,6 +107,7 @@ function UserProfile() {
   };
 
   const handleUnfollow = async () => {
+    setRander(!rander);
     setFollowed(false);
     try {
       const response = await fetch(`/api/unfollow/${params.userName}`, {
@@ -114,13 +135,33 @@ function UserProfile() {
             "Content-Type": "application/json",
           },
         });
-        setFData((await result.json())[0]);
+
+        const FollowerFollowingData = await result.json();
+        // console.log(FollowerFollowingData);
+
+        const followersData = userName
+          .map((name, index) => {
+            if (FollowerFollowingData[0].followers.includes(name)) {
+              return {
+                userName: name,
+                profilePic: allUserPicture[index],
+              };
+            }
+            return null; // Skip non-followers
+          })
+          .filter(Boolean);
+
+        setFData({ followers: [followersData][0] });
+
+        console.log(fData);
+
+        // setFData((await result.json())[0]);
       } catch (error) {
         console.log(error);
       }
     };
     fetchByTheparams();
-  }, [followed]);
+  }, [loading, followed]);
 
   useEffect(() => {
     if (toggleFollowers && followed) {
@@ -129,16 +170,37 @@ function UserProfile() {
       document.body.style.overflowY = "scroll";
     }
   }, [toggleFollowers]);
-
+  const handleClickFollowers = (e) => {
+    listed.current.click();
+  };
   const handleScroll = (event) => {
-    console.log(event.deltaY);
+    if (!followBox.current) return;
 
     const blackBox = followBox.current;
     if (blackBox) {
       // Adjust the scroll position of the black box
       blackBox.scrollTop += event.deltaY * 0.5;
     }
+
+    const boxCenter = blackBox.offsetHeight / 2;
+    const boxTop = blackBox.scrollTop;
+    const item = Array.from(blackBox.children);
+    let closestIndex = -1;
+    let smallestDistance = Infinity;
+    item.forEach((e, i) => {
+      const itemCenter = e.offsetTop + e.offsetHeight / 2 - boxTop;
+
+      const destanceForCenter = Math.abs(itemCenter - boxCenter);
+      console.log("destanceForCenter: ", destanceForCenter, "boxCenter");
+
+      if (destanceForCenter < smallestDistance) {
+        smallestDistance = destanceForCenter;
+        closestIndex = i;
+      }
+    });
+    setActiveIndex(closestIndex);
   };
+  console.log(fData);
 
   return (
     <>
@@ -148,41 +210,56 @@ function UserProfile() {
         <>
           <Nav></Nav>
           {toggleFollowers && followed && (
-            <div
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                delay: 0,
+                duration: 0.5,
+              }}
               ref={followBox}
-              onMouseEnter={() => {
-                setToggleFollowers(true);
-              }}
-              onMouseLeave={() => {
-                setToggleFollowers(!toggleFollowers);
-              }}
+              onMouseEnter={() => setToggleFollowers(true)}
+              onMouseLeave={() => setToggleFollowers(!toggleFollowers)}
               className={`absolute max-h-[400px] overflow-y-auto
-  [&::-webkit-scrollbar]:w-1
-  [&::-webkit-scrollbar-track]:rounded-md
-  [&::-webkit-scrollbar-track]:bg-slate-200
-  [&::-webkit-scrollbar-thumb]:rounded-full
-  [&::-webkit-scrollbar-thumb]:bg-gray-100
-  dark:[&::-webkit-scrollbar-track]:bg-neutral-900
-  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 
-  
-  z-40  overscroll-auto  scroll-smooth text-white opacity-100  w-1/6 h-1/6 bg-black sm:right-3/4    rounded-md border shadow hover:shadow-2xl duration-500  hover:shadow-blue-800  `}
+         [&::-webkit-scrollbar]:hidden
+         [&::-webkit-scrollbar-track]:rounded-md
+         [&::-webkit-scrollbar-track]:bg-slate-200
+         [&::-webkit-scrollbar-thumb]:rounded-full
+         [&::-webkit-scrollbar-thumb]:bg-gray-100
+         dark:[&::-webkit-scrollbar-track]:bg-neutral-900
+         dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 
+         z-40 text-white opacity-100  w-1/6 h-1/5 bg-black 
+         sm:right-3/4 grid gap-2 rounded-xl border shadow-2xl  shadow-blue-500 
+         antialiased duration-500 p-2
+       `}
             >
-
-              <h1 className="text-center">
-              <i className="bi bi-people-fill"></i>
-              </h1>
-              <hr />
-              {fData?.followers?.map((follower) => (
+              {fData?.followers?.map((follower, index) => (
                 <div
-                  key={follower}
-                  className="flex gap-2 mx-auto   w-fit text-white"
+                  key={follower.id || index} // Always include a key for performance
+                  className={`flex gap-4 items-center border p-2 rounded-xl transition-all 
+             ${index === activeIndex ? "brightness-100 " : "scale-75 blur-sm brightness-50"}`}
+                  ref={index === activeIndex ? listed : notShowd}
+                  onClick={() => {
+                    navigate(`/search/user/${follower.userName}`);
+                  }}
                 >
-                  {follower}
+                  <img
+                    src={new URL(follower.profilePic, import.meta.url).href}
+                    alt={`${follower.userName}'s profile`}
+                    style={{ aspectRatio: "1 / 1" }}
+                    className="h-12 w-12 object-cover rounded-full"
+                  />
+                  <h1 className="text-base text-pretty font-medium">
+                    {follower.userName}
+                  </h1>
                 </div>
               ))}
-            </div>
+            </motion.div>
           )}
-          <div className={`duration-500 ${toggleFollowers && followed ? "blur-sm" : ""}`}>
+          .
+          <div
+            className={`duration-500 ${toggleFollowers && followed ? "blur-sm brightness-50" : ""}`}
+          >
             <div className="border overflow-x-hidden bg-zinc-800 justify-center flex  text-gray-300  gap-5   sm:gap-32 rounded-b-3xl">
               <div className="text-gray-300 flex  justify-center gap-6 rounded-b-3xl">
                 <img
@@ -205,6 +282,7 @@ function UserProfile() {
                     </div>
 
                     <div
+                      onClick={handleClickFollowers}
                       onWheel={handleScroll}
                       onMouseEnter={() => {
                         setToggleFollowers(!toggleFollowers);
@@ -212,13 +290,11 @@ function UserProfile() {
                       onMouseLeave={() => {
                         setToggleFollowers(!toggleFollowers);
                       }}
-                      className="text-sm grid text-center  cursor-pointer  hover:bg-black hover:text-white duration-200 border px-2 w-f rounded-lg  my-auto"
+                      className="text-sm grid text-center  scroll-smooth cursor-pointer  hover:bg-black hover:text-white duration-200 border px-2 w-f rounded-lg  my-auto"
                     >
                       <h1 className="font-bold ">Followes</h1>
                       <h1 className="font-bold ">
-                        {fData?.followers?.length
-                          ? fData?.followers?.length
-                          : 0}
+                        {fData?.followers?.length ? fData?.followers.length : 0}
                       </h1>
                     </div>
                     <div className="text-sm grid text-center border px-2 rounded-lg  hover:bg-black hover:text-white duration-200  cursor-pointer  my-auto">

@@ -14,9 +14,7 @@ function Nav() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredUsers, setFilteredUsers] = useState([]);
 
-  const [userName, setUserNames] = useState([]);
-
-  const { sm, searchData } = useContext(Background);
+  const { sm, searchData, userName, setAllUserPosts } = useContext(Background);
 
   const [newPost, setNewPost] = useState(null);
   // console.log(sm);
@@ -26,22 +24,6 @@ function Nav() {
 
   const [caption, setCaption] = useState(null);
   const [toggle, setToggle] = useState(false);
-  useEffect(() => {
-    const getUser = async () => {
-      // Make a request to your API here
-
-      const response = await fetch("/user/AllUsers", {
-        mathod: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const jsonData = await response.json();
-      const names = jsonData.map((user) => user.userName); // mapping is the method to the get array.....
-      setUserNames(names);
-    };
-    getUser(); //userName?.filter((name)=>name.userName.includes('AD47'))
-  }, []);
 
   // console.log(userName);
   const handleSearch = (event) => {
@@ -108,20 +90,20 @@ function Nav() {
 
   return (
     <>
-      <nav className="w-full py-2 sm:py-2 sm:relative fixed bottom-0 flex justify-center px-3   items-center   bg-slate-900 text-white">
+      <nav className="w-full py-2 sm:py-2 sm:relative  fixed bottom-0 flex justify-stretch px-3  rounded-t-3xl   items-center   bg-[#A6A6A6] text-black">
         <div className="sm:w-2/5 mx-auto">
           <div className="flex sm:gap-6 gap-1 mx-auto my-auto">
-            <RedirectBtn title={"Home"} className={""} path={"/"} sm={sm} />
+            <RedirectBtn title={<i className="bi bi-house-door-fill"></i>} className={""} path={"/"} sm={sm} />
             {location.pathname != "/Search" && (
               <RedirectBtn
-                title={"Search"}
+                title={<i className="bi bi-search"></i>}
                 className={""}
                 path={"/Search"}
                 sm={sm}
               />
             )}
             {location.pathname == "/Search" && (
-              <div className="text-black">
+              <div className="text-black my-auto  ">
                 <input
                   type="text"
                   className="px-3 rounded-full"
@@ -130,15 +112,14 @@ function Nav() {
                   placeholder="Search for a user..."
                 />
                 <ul
-                  className={`absolute max-h-[400px] overflow-y-auto
+                  className={`absolute max-h-36 overflow-y-auto
   [&::-webkit-scrollbar]:w-2
   [&::-webkit-scrollbar-track]:rounded-full
   [&::-webkit-scrollbar-track]:bg-gray-100
   [&::-webkit-scrollbar-thumb]:rounded-full
   [&::-webkit-scrollbar-thumb]:bg-gray-300
   dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 grid h-36 hover:scroll-auto rounded-b-xl  gap-3 py-2 bg-slate-900 px-5 ${!sm ? "bottom-16 rounded-t-xl" : ""}  ${searchTerm == "" || searchTerm.includes(" ") || filteredUsers.length == 0 || searchTerm.includes(data?.userName) ? "hidden" : ""} `}
-
+  dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 gridhover:scroll-auto rounded-b-xl  w-1/6 gap-3 py-2 bg-slate-900 px-5 ${!sm ? "bottom-16 rounded-t-xl" : ""}  ${searchTerm == "" || searchTerm.includes(" ") || filteredUsers.length == 0 || searchTerm.includes(data?.userName) ? "hidden" : ""} `}
                 >
                   {filteredUsers.map(
                     (user, index) =>
@@ -156,9 +137,12 @@ function Nav() {
                           <div className="flex gap-2 justify-stretch items-center">
                             <img
                               src={
-                                searchData?.find(
-                                  (value) => value.userName === user,
-                                ).imgAdd
+                                new URL(
+                                  searchData?.find(
+                                    (value) => value.userName === user,
+                                  ).imgAdd,
+                                  import.meta.url,
+                                ).href
                               }
                               alt=""
                               style={{
@@ -167,7 +151,7 @@ function Nav() {
                               className="sm:w-14 sm:h-14 w-9 h-9 object-cover rounded-full "
                             />
                             <li
-                              className={` ${index == filteredUsers.length - 1 && sm ? "rounded-b-xl pb-2" : ""} ${!sm && index == 0 ? "rounded-t-xl pt-1" : ""} bg-slate-900 text-white   `}
+                              className={` ${index == filteredUsers.length - 1 && sm ? "rounded-b-xl pb-2" : ""} ${!sm && index == 0 ? "rounded-t-xl pt-1" : ""} bg-slate-900 text-white    MainFont`}
                               style={{ listStyle: "none" }}
                             >
                               {user}
@@ -233,7 +217,7 @@ function Nav() {
               </>
             )}
             <RedirectBtn
-              title={"Explore"}
+              title={<i className="bi bi-bar-chart-line"></i>}
               className={""}
               path={"/Search"}
               sm={sm}
@@ -242,7 +226,7 @@ function Nav() {
         </div>
         {sm && location.pathname != "/profile" && (
           <div
-            className={`sm:w-1/6 ${!sm ? " " : "me-8 px-3"}  flex  cursor-pointer   rounded-xl ${toggle ? "bg-slate-200 shadow-md shadow-black" : "bg-neutral-700"} duration-100 `}
+            className={`sm:w-1/6 ${!sm ? " " : "me-8 px-3"}  flex   cursor-pointer   rounded-xl ${toggle ? "bg-slate-200 shadow-md shadow-black" : "bg-neutral-700"} duration-100 `}
             animate={{}}
             onClick={() => setToggle(!toggle)}
           >

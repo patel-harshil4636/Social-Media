@@ -2,6 +2,7 @@ const express = require("express");
 const Api = express.Router();
 const FFData = require("../Module/Followers");
 const User = require("../Module/Users");
+const Post = require("../Module/Posts");
 
 Api.get("/ffdata", async (req, res) => {
   const followers = await FFData.find(
@@ -97,5 +98,13 @@ Api.delete("/unfollow/:userName", async (req, res) => {
   );
   // console.log(deleteFollowig);
 });
+
+Api.delete('/deleteOnePost/',async(req,res)=>
+{
+  const deletePost= await Post.findOneAndDelete({url:req.body.imgAdd,userName:req.body.userName},{});
+    console.log(deletePost);
+    
+    res.json(deletePost);
+})
 
 module.exports = Api;

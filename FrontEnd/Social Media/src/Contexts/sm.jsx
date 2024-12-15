@@ -7,9 +7,32 @@ export const Provider = (props) => {
   const [searchData, setSearchData] = useState(null);
   const [test, setTest] = useState(null);
   const [sm, setSm] = useState(false);
+  const [allUserPicture, setAllUserPicture] = useState([]);
+  const [userName, setUserNames] = useState([]);
+  const [rander, setRander] = useState(false);
+  const [isProfileUpdated, setIsProfileUpdated] = useState(false);
   const [profileFData, setProfileFData] = useState({});
 
   const x = window.matchMedia("(min-width:640px)");
+  useEffect(() => {
+    const getUser = async () => {
+      // Make a request to your API here
+
+      const response = await fetch("/user/AllUsers", {
+        mathod: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const jsonData = await response.json();
+      // console.log(jsonData);
+      const allPosts = jsonData.map((j) => j.imgAdd);
+      setAllUserPicture(allPosts);
+      const names = jsonData.map((user) => user.userName); // mapping is the method to the get array.....
+      setUserNames(names);
+    };
+    getUser(); //userName?.filter((name)=>name.userName.includes('AD47'))
+  }, []);
 
   useEffect(() => {
     const ffFetcher = async () => {
@@ -41,7 +64,9 @@ export const Provider = (props) => {
     };
 
     ffFetcher();
-  }, []);
+  }, [rander]);
+
+  console.log(rander);
 
   useEffect(() => {
     async function fetchData() {
@@ -56,7 +81,9 @@ export const Provider = (props) => {
       // console.log(data);
     }
     fetchData();
-  }, []);
+  }, [isProfileUpdated]);
+  
+  
 
   x.addEventListener("change", () => {
     if (x.matches) {
@@ -92,9 +119,22 @@ export const Provider = (props) => {
     };
     allUserSearchListData();
   }, []);
-
+  const [updatedFileToggle, setUpdatedFileToggle] = useState();
   return (
-    <Background.Provider value={{ sm, data, searchData, profileFData }}>
+    <Background.Provider
+      value={{
+        sm,
+        data,
+        searchData,
+        isProfileUpdated,
+        setIsProfileUpdated,
+        profileFData,
+        allUserPicture,
+        userName,
+        rander,
+        setRander,
+      }}
+    >
       {props.children}
     </Background.Provider>
   );

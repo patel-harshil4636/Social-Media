@@ -12,7 +12,7 @@ import Profile from "./Pages/Profile";
 import UserSearch from "./Pages/Search";
 import UserProfile from "./Pages/userProfile";
 import { fetchData } from "./Services/api";
-import ScrollSync from "./Pages/text";
+import Test from "./Pages/text";
 
 function App() {
   const navigate = useNavigate();
@@ -37,16 +37,18 @@ function App() {
   }, []);
   return (
     <>
+    <div className="bg-[#E9EDC9]">
       <Routes>
         <Route path="/" element={<Home />}></Route>
         <Route path="/SignUp" element={<SignUp />}></Route>
-        <Route path="/test" element={<ScrollSync />}></Route>
+        <Route path="/test" element={<Test />}></Route>
         <Route path="/logout" element={<LogOut />}></Route>
         <Route path="/Login" element={<Login />}></Route>
         <Route path="/Profile" element={<Profile />}></Route>
         <Route path="/Search" element={<UserSearch />}></Route>
         <Route path="/Search/user/:userName" element={<UserProfile />}></Route>
       </Routes>
+      </div>
     </>
   );
 }

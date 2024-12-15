@@ -54,7 +54,7 @@ const SignUp = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center text-gray-700 mb-6">
+        <h2 className="text-2xl font-bold text-center text-gray-700 haha f jfahrsho ostr htmk cdss and jawascritmb-6">
           Sign Up
         </h2>
         <form

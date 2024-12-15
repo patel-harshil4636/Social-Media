@@ -12,6 +12,30 @@ const Busboy = require("busboy");
 
 const userRouter = express.Router();
 
+const updateProfileDiskStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "../FrontEnd/Social Media/src/assets/uploads/");
+  },
+  filename: async function (req, file, cb) {
+    const result = await User.findOne({ email: req.user?.Email });
+    console.log(result);
+
+    let add = result.id + "-" + file.originalname;
+    const updataedResult = await User.findOneAndUpdate(
+      result._id,
+      { imgAdd: "../assets/uploads/" + add },
+      { new: true },
+    );
+    const data = await User.findById(updataedResult._id);
+    // console.log(data);
+    req.user = data;
+
+    cb(null, add);
+  },
+});
+
+const updateProfile = multer({ storage: updateProfileDiskStorage });
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "../FrontEnd/Social Media/src/assets/uploads/");
@@ -152,10 +176,12 @@ userRouter.get("/allPosts", async (req, res) => {
 // Send All userNames
 
 userRouter.get("/AllUsers", async (req, res) => {
-  const users = await User.find({}, { userName: 1, email: 1, _id: 0 });
+  const users = await User.find(
+    {},
+    { userName: 1, imgAdd: 1, email: 1, _id: 0 },
+  );
   res.json(users);
 });
-
 
 // send All User Data for the Search List
 
@@ -168,12 +194,20 @@ userRouter.get("/SearchList/Data", async (req, res) => {
 // send percular person data from the userName
 userRouter.get("/this/:userName", async (req, res) => {
   // console.log(req.params.userName);
+  const thisUser = await User.findOne({ email: req.user.Email });
 
   const user = await User.findOne({ userName: req.params.userName });
   const allPosts = await Post.find({ userName: req.params.userName });
   // console.log(allPosts);
-
+  if (thisUser.userName === req.params.userName) {
+    return res.status(403);
+  }
   res.json({ user, allPosts });
+});
+
+userRouter.post("/updateProfile", updateProfile.single("file"), (req, res) => {
+  console.log(req.file);
+  res.status(200);
 });
 
 module.exports = userRouter;
