@@ -21,6 +21,11 @@ export default defineConfig({
   ],
   server: {
     proxy: {
+      "/notify/allNotification": {
+        target: "http://localhost:8000", // Replace with your backend URL
+        changeOrigin: true,
+        secure: false,
+      },
       "/api/ffData/": {
         target: "http://localhost:8000", // Replace with your backend URL
         changeOrigin: true,

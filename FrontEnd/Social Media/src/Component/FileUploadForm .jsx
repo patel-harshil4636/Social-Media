@@ -4,7 +4,7 @@ import { Background } from "../Contexts/sm";
 const FileUploadForm = (props) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [error, setError] = useState("");
-  const {isProfileUpdated,setIsProfileUpdated }=useContext(Background)
+  const { isProfileUpdated, setIsProfileUpdated } = useContext(Background);
   const [isTaskComplete, setIsTaskComplete] = useState(false);
 
   const handleFileChange = (e) => {
@@ -57,8 +57,7 @@ const FileUploadForm = (props) => {
       console.error("Error uploading file:", error);
       setError("An error occurred while uploading the file. Please try again.");
     }
-    setIsProfileUpdated(!isProfileUpdated)
-
+    setIsProfileUpdated(!isProfileUpdated);
   };
 
   return (

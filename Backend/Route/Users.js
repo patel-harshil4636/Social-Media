@@ -8,7 +8,7 @@ const { log } = require("console");
 const Post = require("../Module/Posts");
 const pvtKey = "harshil4636";
 const path = require("path");
-const Busboy = require("busboy");
+const twilio = require("twilio");
 
 const userRouter = express.Router();
 
@@ -72,15 +72,10 @@ userRouter.get("/logout", async (req, res) => {
   return res.json({
     message: "Logged Out",
   });
-
-  // res.clearCookie("token");
-  // res.json({message: 'Logged Out'})
 });
 
 userRouter.get("/api", restrictTo(), async (req, res) => {
   const result = await User.find({ email: req.user?.Email });
-  // console.log(result);
-
   res.json(result);
 });
 
@@ -91,13 +86,9 @@ userRouter.post("/signup", upload.single("picture"), async (req, res) => {
   if (!req.user) return res.redirect("/user/signup");
 
   const result = req.user;
-  // console.log(result);
-
   let token = jwt.sign({ Name: result.Fname, Email: result.email }, pvtKey);
   res.cookie("token", token);
-  // console.log(req.cookies);
-
-  return res.redirect("/");
+  return res.redirect("http://localhost:5173/register");
 });
 
 userRouter.get("/login", (req, res) => {
@@ -191,7 +182,7 @@ userRouter.get("/SearchList/Data", async (req, res) => {
   res.json(data);
 });
 
-// send percular person data from the userName
+// send pertular person data from the userName
 userRouter.get("/this/:userName", async (req, res) => {
   // console.log(req.params.userName);
   const thisUser = await User.findOne({ email: req.user.Email });
@@ -199,7 +190,7 @@ userRouter.get("/this/:userName", async (req, res) => {
   const user = await User.findOne({ userName: req.params.userName });
   const allPosts = await Post.find({ userName: req.params.userName });
   // console.log(allPosts);
-  if (thisUser.userName === req.params.userName) {
+  if (thisUser?.userName === req.params.userName) {
     return res.status(403);
   }
   res.json({ user, allPosts });
@@ -210,4 +201,29 @@ userRouter.post("/updateProfile", updateProfile.single("file"), (req, res) => {
   res.status(200);
 });
 
+userRouter.post("/sendOtp/:phoneNumber", async (req, res) => {
+  const phoneNumber = req.params.phoneNumber;
+  const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
+
+  const accountSid = "AC798da7c5498b3cbe294e3ecaf8e093c5";
+  const authToken = "fa4035252b696c329ea9f1b23ee2ab35";
+  const client = new twilio(accountSid, authToken);
+
+  // Send OTP via SMS using Twilio
+  client.messages
+    .create({
+      body: `Your OTP code is ${otp}`,
+      from: "+12345678901",
+      to: "+91" + phoneNumber,
+    })
+    .then((message) => {
+      // Store OTP in database or in-memory session (for verification)
+      // You can store this OTP temporarily with a time limit (e.g., 5 minutes)
+      // For demo, we will send it as a response
+      res.json({ otp, message: "OTP sent successfully!" });
+    })
+    .catch((err) => {
+      res.status(500).json({ error: err.message });
+    });
+});
 module.exports = userRouter;

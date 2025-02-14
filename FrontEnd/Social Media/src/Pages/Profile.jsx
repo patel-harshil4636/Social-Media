@@ -5,8 +5,12 @@ import WarningBtn from "../Component/WarningBtn";
 import js from "@eslint/js";
 import { motion, animate } from "framer-motion";
 import FileUploadForm from "../Component/FileUploadForm ";
+import { useNavigate } from "react-router-dom";
+import Post from "../Component/Post";
 
 function Profile() {
+  const navigate = useNavigate();
+
   const { sm, profileFData, updatedFileToggle } = useContext(Background);
   const [toggle, setToggle] = useState(false);
   const [editImgToggle, setEditImgToggle] = useState(false);
@@ -14,14 +18,25 @@ function Profile() {
   const [showImgFrom, setShowImgFrom] = useState(false);
   const [files, setFiles] = useState(null);
   const [newPost, setNewPost] = useState(null);
-  const [editCaption,setEditCaption]= useState(false);
-  const [isPostDeleted, setIsPostDeleted] = useState(false)
+  const [editCaption, setEditCaption] = useState(false);
+  const [isPostDeleted, setIsPostDeleted] = useState(false);
   const [caption, setCaption] = useState(null);
-  const [postEditId, setPostEditId] = useState(null); //  isdentify the post
-  const captionRef=useRef([]);
+  const captionRef = useRef([]);
   const [toggleEditPost, setToggleEditPost] = useState(false);
-  const { data,isProfileUpdated } = useContext(Background);
+  const { data, isProfileUpdated } = useContext(Background);
   const [posts, setPosts] = useState([]);
+  const followBox = useRef(null);
+  const [whosTrigger, setWhosTrigger] = useState("");
+  const [toggleFF, setToggleFF] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(null);
+  const listed = useRef(null);
+  useEffect(() => {
+    if (toggleFF) {
+      document.body.style.overflowY = "hidden";
+    } else {
+      document.body.style.overflowY = "scroll";
+    }
+  }, [toggleFF]);
 
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -71,48 +86,120 @@ function Profile() {
     console.log(updatedFileToggle);
 
     fetchData();
-  }, [newPost, updatedFileToggle,isPostDeleted]);
+  }, [newPost, updatedFileToggle, isPostDeleted]);
 
-  const handleEdit = (index) => {
-    setToggleEditPost(!toggleEditPost);
-    setPostEditId(index);
+  const handleClickFollowers = (e) => {
+    listed.current.click();
   };
 
-  const handleDeletePost =async(add,uName)=>{
-    const conformation=prompt(`Are you sure you want to delete then TYPE DELETE`);
-    if(conformation==='DELETE' && conformation)
-    {
-      
-     try {
-        const deleteResopose = await fetch('/api/deleteOnePost',
-          {
-            method:"DELETE",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              imgAdd: add,
-              userName: uName,
-            }),
-          }
-        );// delete api
-          const deletedPostCaption= await deleteResopose.json();
-          setIsPostDeleted(!isPostDeleted);
+  const handleScroll = (event) => {
+    if (!followBox.current) return;
 
-          alert("Dear "+data?.Fname+" " +data?.Lname+" your Post Created at "+deletedPostCaption?.createdAt.split('T')[0].replace('T','')+" are Deleted")
-          
-     } catch (error) {
-      
-     }
+    const blackBox = followBox.current;
+    if (blackBox) {
+      // Adjust the scroll position of the black box
+      blackBox.scrollTop += event.deltaY * 0.5;
     }
-  }
-  //   console.log(profileFData);
+
+    const boxCenter = blackBox.offsetHeight / 2;
+    const boxTop = blackBox.scrollTop;
+    const item = Array.from(blackBox.children);
+    let closestIndex = -1;
+    let smallestDistance = Infinity;
+    item.forEach((e, i) => {
+      const itemCenter = e.offsetTop + e.offsetHeight / 2 - boxTop;
+
+      const destanceForCenter = Math.abs(itemCenter - boxCenter);
+      // console.log("destanceForCenter: ", destanceForCenter, "boxCenter");
+
+      if (destanceForCenter < smallestDistance) {
+        smallestDistance = destanceForCenter;
+        closestIndex = i;
+      }
+    });
+    setActiveIndex(closestIndex);
+  };
+  // console.log(profileFData);
   // console.log(editImgToggle);
 
   return (
     <>
       <Nav></Nav>
-      <div className="MainFont overflow-x-hidden bg-zinc-600 ">
+
+    
+      {toggleFF && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            delay: 0,
+            duration: 0.5,
+          }}
+          ref={followBox}
+          onMouseEnter={() => setToggleFF(true)}
+          onMouseLeave={() => setToggleFF(!toggleFF)}
+          className={`absolute max-h-[400px] overflow-y-auto
+                [&::-webkit-scrollbar]:hidden
+                [&::-webkit-scrollbar-track]:rounded-md
+                [&::-webkit-scrollbar-track]:bg-slate-200
+                [&::-webkit-scrollbar-thumb]:rounded-full
+                [&::-webkit-scrollbar-thumb]:bg-gray-100
+                dark:[&::-webkit-scrollbar-track]:bg-neutral-900
+                dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 
+                z-40 text-white opacity-100  w-1/6 h-1/5 bg-black 
+                sm:right-3/4 grid gap-2 rounded-xl border shadow-2xl  shadow-blue-500 
+                antialiased duration-500 p-2
+              `}
+        >
+
+          {whosTrigger == "followers" &&
+            profileFData?.followers?.map((follower, index) => (
+              <div
+                key={follower.id || index} // Always include a key for performance
+                className={`flex gap-4 items-center border p-2 rounded-xl transition-all 
+                    ${index === activeIndex ? "brightness-100 " : "scale-75 blur-sm brightness-50"}`}
+                ref={index === activeIndex ? listed : null}
+                onClick={() => {
+                  navigate(`/search/user/${follower.userName}`);
+                }}
+              >
+                <img
+                  src={new URL(follower.imgAdd, import.meta.url).href}
+                  alt={`${follower.userName}'s profile`}
+                  style={{ aspectRatio: "1/1" }}
+                  className="h-12 w-12 object-cover rounded-full"
+                />
+                <h1 className="text-base text-pretty font-medium">
+                  {follower.userName}
+                </h1>
+              </div>
+            ))}
+          {whosTrigger == "following" &&
+            profileFData?.following?.map((follower, index) => (
+              <div
+                key={follower.id || index} // Always include a key for performance
+                className={`flex gap-4 items-center border p-2 rounded-xl transition-all 
+                    ${index === activeIndex ? "brightness-100 " : "scale-75 blur-sm brightness-50"}`}
+                ref={index === activeIndex ? listed : null}
+                onClick={() => {
+                  navigate(`/search/user/${follower}`);
+                }}
+              >
+                {console.log(follower)}
+                <img
+                  src={new URL(follower.profilePic, import.meta.url).href}
+                  alt={`${follower.userName}'s profile`}
+                  style={{ aspectRatio: "1 / 1" }}
+                  className="h-12 w-12 object-cover rounded-full"
+                />
+                <h1 className="text-base text-pretty font-medium">
+                  {follower}
+                </h1>
+              </div>
+            ))}
+        </motion.div>
+      )}
+      <div className="MainFont overflow-x-hidden bg-zinc-600 duration-500 ">
         <div className=" text-gray-300 flex  justify-center gap-6 rounded-b-3xl">
           <img
             src={new URL(data?.imgAdd, import.meta.url).href}
@@ -161,9 +248,25 @@ function Profile() {
                 <h1 className="font-bold ">Followes</h1>
                 <h1 className="font-bold ">{profileFData.followers?.length}</h1>
               </div>
-              <div className="text-sm grid text-center border px-2 rounded-lg  hover:bg-black hover:text-white duration-200  cursor-pointer  my-auto">
+              <div
+                onClick={handleClickFollowers}
+                onWheel={handleScroll}
+                onMouseEnter={() => {
+                  setWhosTrigger("following");
+                  setToggleFF(!toggleFF);
+                }}
+                onMouseLeave={() => {
+                  setWhosTrigger("");
+                  setToggleFF(!toggleFF);
+                }}
+                className="text-sm grid text-center border px-2 rounded-lg  hover:bg-black hover:text-white duration-200  cursor-pointer  my-auto"
+              >
                 <h1 className="font-bold ">Following</h1>
-                <h1 className="font-bold ">{profileFData.following?.length}</h1>
+                <h1 className="font-bold ">
+                  {profileFData?.following?.length
+                    ? profileFData?.following?.length
+                    : 0}
+                </h1>
               </div>
             </div>
             <h1 className="font-bold sm:text-2xl my-1">
@@ -173,6 +276,12 @@ function Profile() {
             <h1 className="font-bold sm:text-2xl text-black text-center">
               {data?.Fname} {data?.Lname}
             </h1>
+            <button
+              type="button"
+              className="font-bold sm:text-xl  text-black text-center border border-slate-950 p-2 rounded-2xl  hover:bg-slate-800 hover:text-slate-50 duration-300"
+            >
+              Edit Profile <i className="bi bi-pencil-square"></i>
+            </button>
           </div>
         </div>
       </div>
@@ -238,126 +347,18 @@ function Profile() {
             </>
           )}
         </div>
-        <div className="flex  flex-wrap  gap-4 p-3   justify-center w-fit sm:w-5/6 mx-auto">
+        <div className="flex  flex-wrap  gap-4 p-3 text-black  justify-center w-fit sm:w-5/6 mx-auto">
           {posts.map((post, index) => (
-            <div key={index} className="bg-[#FEFAE0] text-sm w-48  sm:text-xl sm:w-max  rounded-xl">
-              <div className="flex bg mx-auto">
-             <div className="flex rounded-xl rounded-bl-none rounded-tr-none mb-4 p-1 px-4 justify-between gap-5 bg-[#E9EDC9]">
-             <img
-                  src={new URL(data?.imgAdd, import.meta.url).href}
-                  className="rounded-full object-cover object-center w-7 h-7"
-                  alt=""
-                />
-                <h1 className="text-black my-auto  font-medium">
-                  {data?.userName}
-                </h1>
-             </div>
-               <div className="ms-auto mt-1 me-1">
-               <motion.i
-                  animate={{
-                    rotate:
-                      postEditId == index && toggleEditPost ? [0, 90] : [90, 0],
-                  }}
-                  transition={{
-                    duration: 0.1,
-                    bounceStiffness: 1,
-                    bounceDamping: 2,
-                    damping: 5,
-                    delayChildren: 0.5,
-                    // delay: 0.5,
-
-                    type: "spring",
-                  }}
-                  className="bi  bi-three-dots-vertical text-lg block  cursor-pointer text-black"
-                  onClick={() => {
-                    handleEdit(index);
-                  }}
-                ></motion.i>
-               </div>
-              </div>
-              {postEditId === index && (
-                <div className="absolute  w-fit">
-                  <motion.ul
-                    initial={{
-                      height: 10,
-                    }}
-                    layout
-                    animate={{
-                      opacity: toggleEditPost ? [0, 1] : [1, 0],
-                      // visibility:toggleEditPost?['hidden','show']:['show','hidden'],
-                      height: toggleEditPost ? "auto" : 10,
-                    }}
-                    transition={{
-                      duration: 0.1,
-                      ease: "easeInOut",
-
-                      // delay: 0.5,
-                    }}
-                    className="text-black relative grid gap-3 text-center cursor-pointer bg-purple-600 rounded-xl sm:left-44 left-28 p-2 bottom-2 "
-                  >
-                    <motion.li
-                      animate={{
-                        opacity: [0, 1],
-                      }}
-                      onClick={()=>{
-                        handleDeletePost(post.url,data?.userName);
-                      }}
-                      className="flex gap-3  justify-center select-none "
-                    >
-                      Delete <i className="bi bi-trash3-fill"></i>
-                    </motion.li>
-                    <motion.li
-                      animate={{
-                        opacity: [0, 1],
-                      }}
-                      onClick={()=>{
-                        setEditCaption(!editCaption);
-                    console.log(captionRef.current[index].disabled?captionRef.current[index].click( ):'');
-                      
-                                            
-                      }}
-                      className="flex gap-3 justify-center select-none  "
-                    >
-                      Edit<i className="bi bi-pencil-square"></i>
-                    </motion.li>
-                  </motion.ul>
-                </div>
-              )}
-              <img
-                className="w-max sm:h-80 h-48 mx-5   object-cover  object-center  rounded-xl  "
-                src={[post?.url]}
-                alt="a"
-                style={{
-                  aspectRatio: "4/5",
-                }}
-              />
-            <div className="flex gap-2 my-2.5 items-center sm:text-xl text-sm">
-            <div className=" flex gap-2 px-3 items-center rounded-sm rounded-r-full bg-[#FADDE1]">
-                <i className="bi bi-heart-fill text-pink-700 "></i>
-                <i className="bi bi-chat   text-black"></i>
-              </div>
-           <div className="flex text-[#222618] py-0.5 px-2 ms-auto w-2/3   rounded-l-full bg-[#E9EDC9] my-auto gap-2">
-
-           <h3 className="mx-auto">
-           {post?.caption} 
-           </h3>
-           {/* <input  type="text"  className="w-fit" value={editCaption?"":post.caption} onKeyUp={()=>
-                {
-
-                }
-              } disabled={editCaption&&index==postEditId?false:true } ref={(el)=>(captionRef.current[index]=el)} /> */}
-           
-           </div>
-            </div>
-            </div>
+            <Post
+              postId={post._id}
+              url={new URL(post.url, import.meta.url).href}
+              profile={true}
+              userName={data?.userName}
+              caption={post.caption}
+              proPicture={new URL(data?.imgAdd, import.meta.url).href}
+              index={index}
+            ></Post>
           ))}
-          {
-            posts.length === 0 && (
-              <div className="flex justify-center items-center w-fit h-full">
-                <h1 className="text-xl text-center text-black">No Posts</h1>
-              </div>
-            )
-          }
         </div>
       </div>
     </>

@@ -92,7 +92,7 @@ const SignUp = () => {
               className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <h3 className="text-4xl">{formData.FullName} </h3>
+          {/* <h3 className="text-4xl">{formData.FullName} </h3> */}
           {/* Username */}
           <div>
             <label className="block text-sm font-medium text-gray-600">

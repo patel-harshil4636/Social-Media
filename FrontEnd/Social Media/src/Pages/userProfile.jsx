@@ -1,389 +1,443 @@
-import React, {
-  Suspense,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useContext, useEffect, useState } from "react";
 import Nav from "../Component/Nav";
-import { Background } from "../Contexts/sm";
-import js from "@eslint/js";
-import { animate, useScroll } from "framer-motion";
-import InfoBtn from "../Component/InfoBtn";
+import Post from "../Component/Post";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Background } from "../Contexts/sm";
 
-function UserProfile() {
-  const [posts, setPosts] = useState([]);
-  const followBox = useRef(null);
-
-  const [activeIndex, setActiveIndex] = useState(null);
-
+function userProfile() {
+  const [isFollowed, setIsFollowed] = useState(false);
+  const [isPendding, setIsPendding] = useState(false);
+  const [userDetails, setUserDetails] = useState(null);
+  const [userFollowers, setUserFollowers] = useState([]);
+  const [userFollowing, setUserFollowing] = useState([]);
+  // const [userFollowsDetails,setUserFollowsDetails]=useState([]);
+  const { sm } = useContext(Background);
+  const [userPost, setUserPost] = useState([]);
+  const [showMenu, setShowMenu] = useState({
+    show: false,
+    who: "",
+  });
+  const [FFProfilePic, setFFProfilePic] = useState([]);
   const navigate = useNavigate();
 
-  const { allUserPicture, userName, setRander, rander } =
-    useContext(Background);
-  // console.log({allUserPosts,userName});
-
   const params = useParams();
-  const [loading, seLoading] = useState(true);
-  const [data, setData] = useState({});
-  const [unFollowed, setUnFollowed] = useState(null);
-  const [followed, setFollowed] = useState(false);
-  const [toggleFollowers, setToggleFollowers] = useState(false);
 
-  const [fData, setFData] = useState({});
-  const { scrollYProgress } = useScroll();
-  const listed = useRef(null);
-  const notShowd = useRef(null);
+  // console.log(params);
 
   useEffect(() => {
-    if (params.userName) {
-      console.log("the user name is " + params.userName);
-      const profileFetch = async () => {
-        try {
-          const response = await fetch(`/user/this/${params.userName}`, {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-          const jsonData = await response.json();
-
-          if (jsonData) {
-            setData(jsonData);
-            seLoading(false); // Explicitly set loading to false
-          }
-        } catch (error) {
-          console.error("Error fetching profile:", error);
-          seLoading(false); // Ensure loading stops even on error
-        }
-      };
-
-      profileFetch();
-    }
-  }, [params.userName]);
-
-  useEffect(() => {
-    const checkFollowed = async () => {
-      try {
-        const response = await fetch(`/api/checkFollowed/${params.userName}`, {
+    const getUserDetails = async () => {
+      const resFFData = await fetch(
+        "http://localhost:8000/api/ffdata/" + params.userName,
+        {
           method: "GET",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
           },
-        });
-        const rData = await response.json();
-        if (rData[0]?.Following?.includes(params.userName)) {
-          setFollowed(true);
-        } else {
-          setFollowed(false);
-        }
-      } catch (error) {
-        console.error("Error checking followed status:", error);
+        },
+      );
+      const res = await fetch(
+        "http://localhost:8000/user/this/" + params.userName,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const FFdata = await resFFData.json();
+      setUserFollowers(FFdata?.followersProfile);
+      setUserFollowing(FFdata?.followingProfile);
+      setFFProfilePic(FFdata?.mergedData);
+      const data = await res.json();
+      setUserPost(data?.allPosts);
+
+      setUserDetails(await data.user);
+    };
+    getUserDetails();
+
+    return async () => {
+      const resCheckedProfile = await fetch(
+        "http://localhost:8000/notify/checkedprofile/" + params.userName,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    };
+  }, []);
+  // console.log("all Profile Picture ", FFProfilePic)
+
+  const checkPendding = async () => {
+    const resCheckPendding = await fetch(
+      "http://localhost:8000/api/notifications/" + params.userName,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const result = await resCheckPendding.json();
+    if (result?.userName === params.userName && result?.status == "pending") {
+      setIsPendding(true);
+      console.log("Pending status set to true");
+    } else {
+      setIsPendding(false);
+      console.log("Pending status remains false");
+    }
+  };
+
+  useEffect(() => {
+    const fetchFFData = async () => {
+      // console.log('http://localhost:8000/api/checkFollowed/'+params.userName);
+
+      const res = await fetch(
+        "http://localhost:8000/api/checkFollowed/" + params.userName,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+      const data = await res.json();
+      // console.log(data);
+      if (data.length > 0) {
+        setIsFollowed(true);
       }
     };
-    checkFollowed();
-  }, [params.userName]);
+    fetchFFData();
 
-  const handleFollow = async () => {
-    setRander(!rander);
+    checkPendding();
+  }, [isFollowed, isPendding]);
 
-    setFollowed(true); // This triggers a re-render
-    try {
-      const response = await fetch(`/api/Follow/${params.userName}`, {
+  // ShowMenu followers Manu Showing Method
+  const handleShowMenu = (a) => {
+    console.log("a", a);
+
+    a == "followers"
+      ? setShowMenu({ show: true, who: "followers" })
+      : setShowMenu({ show: true, who: "followings" });
+  };
+
+  console.log(showMenu);
+
+  // handleHiddenMenu
+  const handleHiddenMenu = () => {
+    setShowMenu({ show: false });
+  };
+
+  // handle The Following Criteria
+  const handelFollow = async () => {
+    await checkPendding(); // Ensure this completes
+    const FollowRes = await fetch(
+      "http://localhost:8000/api/follow/" + params.userName,
+      {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-      });
-      const rdata = await response.json();
-      if (rdata?.followers?.includes(params.userName)) {
-        setFollowed(true); // This triggers a re-render
-      }
-    } catch (error) {
-      console.error("Error following user:", error);
+        credentials: "include",
+      },
+    );
+    if (FollowRes.ok) {
+      setIsFollowed(true); // Update state to reflect the follow action
     }
   };
 
-  const handleUnfollow = async () => {
-    setRander(!rander);
-    setFollowed(false);
-    try {
-      const response = await fetch(`/api/unfollow/${params.userName}`, {
+  // to UnFollow The User
+  const handleUnFollow = async () => {
+    const unFollowRes = await fetch(
+      "http://localhost:8000/api/unfollow/" + params.userName,
+      {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-      });
-      if (response.ok) {
-        setFollowed(false); // This triggers a re-render
-      } else {
-        console.error("Error unfollowing user");
-      }
-    } catch (error) {
-      console.error("Error unfollowing user:", error);
+        credentials: "include",
+      },
+    );
+    if (res) {
+      setIsFollowed(false);
     }
   };
 
-  useEffect(() => {
-    const fetchByTheparams = async () => {
-      try {
-        const result = await fetch("/api/ffdata/" + params.userName, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        const FollowerFollowingData = await result.json();
-        // console.log(FollowerFollowingData);
-
-        const followersData = userName
-          .map((name, index) => {
-            if (FollowerFollowingData[0].followers.includes(name)) {
-              return {
-                userName: name,
-                profilePic: allUserPicture[index],
-              };
-            }
-            return null; // Skip non-followers
-          })
-          .filter(Boolean);
-
-        setFData({ followers: [followersData][0] });
-
-        console.log(fData);
-
-        // setFData((await result.json())[0]);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchByTheparams();
-  }, [loading, followed]);
-
-  useEffect(() => {
-    if (toggleFollowers && followed) {
-      document.body.style.overflowY = "hidden";
-    } else {
-      document.body.style.overflowY = "scroll";
-    }
-  }, [toggleFollowers]);
-  const handleClickFollowers = (e) => {
-    listed.current.click();
-  };
-  const handleScroll = (event) => {
-    if (!followBox.current) return;
-
-    const blackBox = followBox.current;
-    if (blackBox) {
-      // Adjust the scroll position of the black box
-      blackBox.scrollTop += event.deltaY * 0.5;
-    }
-
-    const boxCenter = blackBox.offsetHeight / 2;
-    const boxTop = blackBox.scrollTop;
-    const item = Array.from(blackBox.children);
-    let closestIndex = -1;
-    let smallestDistance = Infinity;
-    item.forEach((e, i) => {
-      const itemCenter = e.offsetTop + e.offsetHeight / 2 - boxTop;
-
-      const destanceForCenter = Math.abs(itemCenter - boxCenter);
-      console.log("destanceForCenter: ", destanceForCenter, "boxCenter");
-
-      if (destanceForCenter < smallestDistance) {
-        smallestDistance = destanceForCenter;
-        closestIndex = i;
-      }
-    });
-    setActiveIndex(closestIndex);
-  };
-  console.log(fData);
+  console.log(userPost);
 
   return (
     <>
-      {loading ? (
-        <h1 className="text-center ">Loading...</h1>
-      ) : (
-        <>
-          <Nav></Nav>
-          {toggleFollowers && followed && (
+      <Nav></Nav>
+      <main className="h-svh MainFont">
+        <div className="sm:w-2/5 w-full text-white grid gap-4 bg-black p-1 mx-auto rounded-b-xl">
+          {showMenu.show &&
+          userFollowers?.length >= 0 &&
+          userFollowing?.length >= 0 ? (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{
-                delay: 0,
-                duration: 0.5,
+              animate={{
+                opacity: [0, 1],
+                // x:[-50,0],
+                y: [-40, 10, 0],
+                transition: {
+                  bounce: 100,
+                  damping: 5,
+                  type: "spring",
+
+                  duration: 0.5,
+                },
               }}
-              ref={followBox}
-              onMouseEnter={() => setToggleFollowers(true)}
-              onMouseLeave={() => setToggleFollowers(!toggleFollowers)}
-              className={`absolute max-h-[400px] overflow-y-auto
-         [&::-webkit-scrollbar]:hidden
-         [&::-webkit-scrollbar-track]:rounded-md
-         [&::-webkit-scrollbar-track]:bg-slate-200
-         [&::-webkit-scrollbar-thumb]:rounded-full
-         [&::-webkit-scrollbar-thumb]:bg-gray-100
-         dark:[&::-webkit-scrollbar-track]:bg-neutral-900
-         dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 
-         z-40 text-white opacity-100  w-1/6 h-1/5 bg-black 
-         sm:right-3/4 grid gap-2 rounded-xl border shadow-2xl  shadow-blue-500 
-         antialiased duration-500 p-2
-       `}
+              exit={{
+                opacity: [1, 0],
+                y: [0, -50],
+                transition: {
+                  duration: 1,
+                },
+              }}
+              onMouseEnter={() => {
+                handleShowMenu(showMenu.who);
+              }}
+              onMouseLeave={handleHiddenMenu}
+              className="h-52  scroll-smooth overflow-y-scroll"
             >
-              {fData?.followers?.map((follower, index) => (
-                <div
-                  key={follower.id || index} // Always include a key for performance
-                  className={`flex gap-4 items-center border p-2 rounded-xl transition-all 
-             ${index === activeIndex ? "brightness-100 " : "scale-75 blur-sm brightness-50"}`}
-                  ref={index === activeIndex ? listed : notShowd}
-                  onClick={() => {
-                    navigate(`/search/user/${follower.userName}`);
-                  }}
-                >
-                  <img
-                    src={new URL(follower.profilePic, import.meta.url).href}
-                    alt={`${follower.userName}'s profile`}
-                    style={{ aspectRatio: "1 / 1" }}
-                    className="h-12 w-12 object-cover rounded-full"
-                  />
-                  <h1 className="text-base text-pretty font-medium">
-                    {follower.userName}
-                  </h1>
-                </div>
-              ))}
+              <ul className="grid gap-2">
+                {showMenu.who == "followers" ? (
+                  userFollowers?.length == 0 ? (
+                    <>
+                      <h1 className="mx-auto text-5xl my-20">
+                        No Followers yet
+                      </h1>
+                    </>
+                  ) : (
+                    userFollowers?.map((user, index) => (
+                      <>
+                        <li
+                          onClick={() => {
+                            navigate(`/search/user/${user.userName}`);
+                            window.location.reload();
+                          }}
+                          key={index}
+                          className="flex cursor-pointer hover:bg-gray-700 hover:text-black duration-200 w-fit mx-auto rounded-xl p-3 justify-center gap-4  "
+                        >
+                          <img
+                            src={
+                              new URL(user.profilePicture, import.meta.url).href
+                            }
+                            className="rounded-full object-cover w-2/12"
+                            style={{
+                              aspectRatio: "2/2",
+                            }}
+                            alt=""
+                          />
+                          <div className="my-auto">
+                            <h1 className="text-center gap-2 flex">
+                              <span>
+                                <i className="bi bi-person-square"></i>
+                              </span>
+                              {user.userName}
+                            </h1>
+                            <h2>Hey Let's Dream With me</h2>
+                          </div>
+                        </li>
+                      </>
+                    ))
+                  )
+                ) : userFollowing.length == 0 ? (
+                  <>
+                    <h1 className="mx-auto text-5xl my-20">No Following yet</h1>
+                  </>
+                ) : (
+                  userFollowing?.map((user, index) => (
+                    <>
+                      <li
+                        onClick={() => {
+                          navigate(`/search/user/${user.userName}`);
+                          window.location.reload();
+                        }}
+                        key={index}
+                        className="flex cursor-pointer   hover:bg-white hover:text-black duration-200 w-fit mx-auto rounded-xl p-3 justify-center gap-4  "
+                      >
+                        <img
+                          src={
+                            new URL(user.profilePicture, import.meta.url).href
+                          }
+                          className="rounded-full object-center  w-2/12"
+                          style={{
+                            aspectRatio: "2/2",
+                          }}
+                          alt=""
+                        />
+                        <div className="my-auto">
+                          <h1 className="text-center gap-2 flex">
+                            <span>
+                              <i className="bi bi-person-square"></i>
+                            </span>
+                            {user.userName}
+                          </h1>
+                          <h2>Hey Let's Dream With me</h2>
+                        </div>
+                      </li>
+                    </>
+                  ))
+                )}
+              </ul>
             </motion.div>
-          )}
-          .
-          <div
-            className={`duration-500 ${toggleFollowers && followed ? "blur-sm brightness-50" : ""}`}
-          >
-            <div className="border overflow-x-hidden bg-zinc-800 justify-center flex  text-gray-300  gap-5   sm:gap-32 rounded-b-3xl">
-              <div className="text-gray-300 flex  justify-center gap-6 rounded-b-3xl">
-                <img
-                  src={new URL(data?.user?.imgAdd, import.meta.url).href}
+          ) : (
+            <>
+              <motion.div
+                animate={{
+                  opacity: [0, 0.5, 1],
+                  y: 0,
+                }}
+                className="justify-evenly  flex sm:gap-10"
+              >
+                <motion.img
+                  initial={{
+                    x: 0,
+                    scale: 1,
+                  }}
+                  animate={
+                    sm
+                      ? {
+                          scale: [0.5, 1],
+                          x: [-100, 0],
+                          y: [-50, 50, 20, 0],
+                        }
+                      : null
+                  }
+                  transition={{
+                    duration: 1,
+                    ease: "easeInOut",
+                    type: "spring",
+                    damping: 15,
+                    stiffness: 200,
+                  }}
+                  src={new URL(userDetails?.imgAdd, import.meta.url).href}
+                  className={`rounded-full relative sm:bottom-5 object-cover object-center shadow-xl  shadow-purple-600  ${!sm ? "w-1/5 my-auto h-2/2" : "w-2/6  "}`}
                   style={{
                     aspectRatio: "2/2",
                   }}
-                  className="w-1/4 sm:w-60 sm:h-60 h-24    rounded-full object-cover my-auto justify-items-start object-center"
                   alt=""
                 />
-                <div className="my-auto">
-                  <div className="flex  gap-2 mx-auto  w-fit text-black">
-                    <div>
-                      <div className="text-sm grid text-center  cursor-pointer  hover:bg-black hover:text-white duration-200 border px-2 w-f rounded-lg  my-auto">
-                        <h1 className="font-bold ">Post</h1>
-                        <h1 className="font-bold ">
-                          {data?.allPosts?.length ? data?.allPosts?.length : 0}
-                        </h1>
-                      </div>
-                    </div>
 
+                <div className="my-auto sm:gap-8 grid sm:text-base  text-sm">
+                  <div className="">
+                    <h1
+                      className={
+                        " sm:text-xl text-sm flex gap-3 justify-center"
+                      }
+                    >
+                      <span>
+                        <i className="bi bi-person-square"></i>
+                      </span>
+                      {userDetails?.userName}
+                    </h1>
+                  </div>
+                  <div className="flex sm:gap-12 gap-5 h-fit my-auto">
+                    <div className="   grid text-center">
+                      <h1>Post</h1>
+                      <h2>{userPost?.length}</h2>
+                    </div>
                     <div
-                      onClick={handleClickFollowers}
-                      onWheel={handleScroll}
+                      onMouseLeave={handleHiddenMenu}
                       onMouseEnter={() => {
-                        setToggleFollowers(!toggleFollowers);
+                        handleShowMenu("followers");
                       }}
-                      onMouseLeave={() => {
-                        setToggleFollowers(!toggleFollowers);
-                      }}
-                      className="text-sm grid text-center  scroll-smooth cursor-pointer  hover:bg-black hover:text-white duration-200 border px-2 w-f rounded-lg  my-auto"
+                      className="grid text-center border   border-black hover:border-white p-1 rounded-xl"
                     >
-                      <h1 className="font-bold ">Followes</h1>
-                      <h1 className="font-bold ">
-                        {fData?.followers?.length ? fData?.followers.length : 0}
-                      </h1>
-                    </div>
-                    <div className="text-sm grid text-center border px-2 rounded-lg  hover:bg-black hover:text-white duration-200  cursor-pointer  my-auto">
-                      <h1 className="font-bold ">Following</h1>
-                      <h1 className="font-bold ">
-                        {fData?.Following?.length
-                          ? fData?.Following?.length
-                          : 0}
-                      </h1>
-                    </div>
-                  </div>
-                  <h1 className="font-bold sm:text-2xl my-1">
-                    User Name: {data?.user?.userName}
-                  </h1>
-                  <h1 className="font-bold sm:text-2xl">
-                    {data?.user?.Fname} {data?.user?.Lname}
-                  </h1>
-                  <h3 className="sm:text-xl font-bold">
-                    Email : {data?.user?.email}
-                  </h3>
-                  <div className="my-1">
-                    {followed ? (
-                      <>
-                        <div className="flex justify-evenly">
-                          <button
-                            onClick={handleUnfollow}
-                            className="bg-blue-500 hover:bg-blue-700  text-white font-bold py-2 px-4 rounded-full"
-                          >
-                            Unfollow
-                          </button>
-                          <button className="border text-white font-bold py-2 px-4 rounded-full">
-                            Massage
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <InfoBtn
-                          title="Follow"
-                          onClick={handleFollow}
-                          className="sm:text-xl"
-                        ></InfoBtn>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            {followed && (
-              <div className="border bg-slate-950 pb-12  text-white rounded-lg">
-                <div className="flex ">
-                  <h2 className="text-xl text-center  w-full mx-auto  font-bold my-auto">
-                    Your Posts
-                  </h2>
-                </div>
-                <div className="flex  flex-wrap  gap-4 p-3 justify-center w-fit sm:w-5/6 mx-auto">
-                  {data.allPosts.map((post, index) => (
-                    <div
-                      key={index}
-                      className="bg-slate-100 rounded-tl-none  rounded-xl"
-                    >
-                      <h1 className="text-black ms-2 font-thin">
-                        {data?.user?.userName}
-                      </h1>
-                      <img
-                        className="w-fit sm:h-80 h-52   object-cover  object-center mx-auto rounded-b-xl  "
-                        src={new URL(post.url, import.meta.url).href}
-                        alt="a"
-                        style={{
-                          aspectRatio: "4/5",
-                        }}
-                      />
-                      <div className="ms-2 flex gap-2">
-                        <i className="bi bi-heart-fill text-pink-700 text-xl"></i>
-                        <i className="bi bi-chat  text-xl text-black"></i>
-                      </div>
-                      <h2 className="text-black ms-2">
-                        Caption: {post.caption}
+                      <h1>Followers</h1>
+                      <h2>
+                        {userFollowers?.length ? userFollowers.length : 0}
                       </h2>
                     </div>
-                  ))}
+                    <div
+                      onMouseLeave={handleHiddenMenu}
+                      onMouseEnter={() => {
+                        handleShowMenu();
+                      }}
+                      className="grid text-center border   border-black hover:border-white p-1 rounded-xl"
+                    >
+                      <h1>Following</h1>
+                      <h2>
+                        {userFollowing?.length ? userFollowing.length : 0}
+                      </h2>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
+            </>
+          )}
+
+          <div className="w-3/4 gap-2 rounded-full  p-1 mx-auto justify-around flex bg-slate-700">
+            <div
+              className={`${isFollowed ? "" : "bg-[#4F4B4B]"} w-full py-1 text-center rounded-full `}
+            >
+              {isPendding ? (
+                <>
+                  <h1>Pendding</h1>
+                </>
+              ) : (
+                <>
+                  {!isFollowed ? (
+                    <h1 className="cursor-pointer" onClick={handelFollow}>
+                      Follow
+                    </h1>
+                  ) : (
+                    <h1 className="cursor-pointer" onClick={handleUnFollow}>
+                      Unfollow
+                    </h1>
+                  )}
+                </>
+              )}
+            </div>
+            <div
+              className={`w-full text-center py-1 rounded-full  ${!isFollowed ? "" : "bg-[#4F4B4B] text-slate-950"} `}
+            >
+              <h1>Massage</h1>
+            </div>
+          </div>
+        </div>
+        {/* Post part */}
+        <div className="bg-gray-700 grid gap-3 sm:p-10 p-5 m-2 rounded-lg">
+          <div className="flex mx-auto    justify-between  ">
+            <div className="w-fit my-auto  px-16  rounded-full text-center bg-black text-white">
+              <h1 className="">Posts</h1>
+            </div>
+            <div className="w-fit my-auto  px-16 rounded-full text-center  ">
+              <h1>Tags</h1>
+            </div>
+          </div>
+          <div className="flex justify-center  gap-2  flex-wrap">
+            {userPost?.length > 0 ? (
+              userPost.map((post, index) => (
+                <>
+                  <Post
+                    postId={post._id}
+                    url={new URL(post.url, import.meta.url).href}
+                    userName={userDetails.userName}
+                    caption={post.caption}
+                    proPicture={
+                      new URL(userDetails.imgAdd, import.meta.url).href
+                    }
+                    index={index}
+                  ></Post>
+                </>
+              ))
+            ) : (
+              <h1>No Post Yet</h1>
             )}
           </div>
-        </>
-      )}
+        </div>
+      </main>
     </>
   );
 }
 
-export default UserProfile;
+export default userProfile;
