@@ -8,7 +8,7 @@ const { log } = require("console");
 const Post = require("../Module/Posts");
 const pvtKey = "harshil4636";
 const path = require("path");
-const twilio = require("twilio");
+
 
 const userRouter = express.Router();
 
@@ -201,29 +201,5 @@ userRouter.post("/updateProfile", updateProfile.single("file"), (req, res) => {
   res.status(200);
 });
 
-userRouter.post("/sendOtp/:phoneNumber", async (req, res) => {
-  const phoneNumber = req.params.phoneNumber;
-  const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
-
-  const accountSid = "AC798da7c5498b3cbe294e3ecaf8e093c5";
-  const authToken = "fa4035252b696c329ea9f1b23ee2ab35";
-  const client = new twilio(accountSid, authToken);
-
-  // Send OTP via SMS using Twilio
-  client.messages
-    .create({
-      body: `Your OTP code is ${otp}`,
-      from: "+12345678901",
-      to: "+91" + phoneNumber,
-    })
-    .then((message) => {
-      // Store OTP in database or in-memory session (for verification)
-      // You can store this OTP temporarily with a time limit (e.g., 5 minutes)
-      // For demo, we will send it as a response
-      res.json({ otp, message: "OTP sent successfully!" });
-    })
-    .catch((err) => {
-      res.status(500).json({ error: err.message });
-    });
-});
+userRouter.post("/sendOtp/:phoneNumber", async (req, res) => {});
 module.exports = userRouter;
