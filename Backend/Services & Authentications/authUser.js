@@ -10,7 +10,7 @@ function authenticateToken(req, res, next) {
   req.user = null;
 
   if (!token) return next();
-
+ 
   req.user = jwt.verify(token, pvtKey);
   // console.log(req.user);
 
